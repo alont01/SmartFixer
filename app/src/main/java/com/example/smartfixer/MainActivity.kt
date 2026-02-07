@@ -4,21 +4,31 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -49,6 +59,8 @@ data class BottomNavItem(
 @Composable
 fun SmartFixerApp() {
     val navController = rememberNavController()
+    val diagnosisViewModel: DiagnosisViewModel = viewModel()
+    val diagnosisState by diagnosisViewModel.uiState.collectAsState()
 
     val bottomNavItems = listOf(
         BottomNavItem(Screen.Home, "Home") { Icon(Icons.Default.Home, contentDescription = "Home") },
@@ -94,16 +106,51 @@ fun SmartFixerApp() {
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(
-                    onDiagnose = { navController.navigate(Screen.Results.route) }
+                    onDiagnose = { issueText ->
+                        diagnosisViewModel.diagnose(issueText)
+                        navController.navigate(Screen.Results.route)
+                    }
                 )
             }
             composable(Screen.Results.route) {
-                ResultsScreen(
-                    onContinueDebugging = { navController.popBackStack() },
-                    onDone = {
-                        navController.popBackStack(Screen.Home.route, inclusive = false)
+                when (val state = diagnosisState) {
+                    is DiagnosisUiState.Loading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(48.dp))
+                        }
                     }
-                )
+                    is DiagnosisUiState.Success -> {
+                        ResultsScreen(
+                            result = state.result,
+                            onContinueDebugging = { navController.popBackStack() },
+                            onDone = {
+                                diagnosisViewModel.resetState()
+                                navController.popBackStack(Screen.Home.route, inclusive = false)
+                            }
+                        )
+                    }
+                    is DiagnosisUiState.Error -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Error: ${state.message}",
+                                color = MaterialTheme.colorScheme.error,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(24.dp)
+                            )
+                        }
+                    }
+                    is DiagnosisUiState.Idle -> {
+                        LaunchedEffect(Unit) {
+                            navController.popBackStack()
+                        }
+                    }
+                }
             }
             composable(Screen.Profile.route) {
                 ProfileScreen()

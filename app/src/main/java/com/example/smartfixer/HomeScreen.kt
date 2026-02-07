@@ -19,7 +19,7 @@ import com.example.smartfixer.ui.theme.SmartFixerTheme
 
 @Composable
 fun HomeScreen(
-    onDiagnose: () -> Unit,
+    onDiagnose: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var issueText by remember { mutableStateOf("") }
@@ -127,7 +127,8 @@ fun HomeScreen(
 
         // Diagnose button
         Button(
-            onClick = onDiagnose,
+            onClick = { onDiagnose(issueText) },
+            enabled = issueText.isNotBlank(),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -179,6 +180,6 @@ private fun UploadOption(
 @Composable
 fun HomeScreenPreview() {
     SmartFixerTheme {
-        HomeScreen(onDiagnose = {})
+        HomeScreen(onDiagnose = { })
     }
 }

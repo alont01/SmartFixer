@@ -13,11 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.smartfixer.data.DiagnosisResult
 import com.example.smartfixer.ui.theme.SmartFixerTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResultsScreen(
+    result: DiagnosisResult,
     onContinueDebugging: () -> Unit,
     onDone: () -> Unit,
     modifier: Modifier = Modifier
@@ -47,7 +49,7 @@ fun ResultsScreen(
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
-                    text = "Leaky Kitchen Faucet",
+                    text = result.title,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -61,14 +63,14 @@ fun ResultsScreen(
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        "Est. 30–45 minutes",
+                        "Est. ${result.estimatedTime}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                     Spacer(Modifier.width(16.dp))
                     AssistChip(
                         onClick = {},
-                        label = { Text("Easy") },
+                        label = { Text(result.difficulty) },
                         leadingIcon = {
                             Icon(
                                 Icons.Default.CheckCircle,
@@ -96,8 +98,7 @@ fun ResultsScreen(
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(Modifier.height(12.dp))
-                val tools = listOf("Adjustable wrench", "Replacement O-rings", "Plumber's grease", "Flat-head screwdriver")
-                tools.forEach { tool ->
+                result.tools.forEach { tool ->
                     Row(
                         modifier = Modifier.padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -126,17 +127,7 @@ fun ResultsScreen(
                 )
                 Spacer(Modifier.height(12.dp))
 
-                val steps = listOf(
-                    "Turn off the water supply valves under the sink.",
-                    "Remove the faucet handle by unscrewing the set screw.",
-                    "Pull out the cartridge or stem assembly.",
-                    "Inspect and replace worn O-rings and washers.",
-                    "Apply plumber's grease to the new O-rings.",
-                    "Reassemble the faucet in reverse order.",
-                    "Turn the water supply back on and test for leaks."
-                )
-
-                steps.forEachIndexed { index, step ->
+                result.steps.forEachIndexed { index, step ->
                     Row(
                         modifier = Modifier.padding(vertical = 6.dp),
                         verticalAlignment = Alignment.Top
@@ -210,6 +201,16 @@ fun ResultsScreen(
 @Composable
 fun ResultsScreenPreview() {
     SmartFixerTheme {
-        ResultsScreen(onContinueDebugging = {}, onDone = {})
+        ResultsScreen(
+            result = DiagnosisResult(
+                title = "Leaky Kitchen Faucet",
+                difficulty = "Easy",
+                estimatedTime = "30-45 minutes",
+                tools = listOf("Adjustable wrench", "Replacement O-rings", "Plumber's grease"),
+                steps = listOf("Turn off water supply.", "Remove faucet handle.", "Replace O-rings.")
+            ),
+            onContinueDebugging = {},
+            onDone = {}
+        )
     }
 }
