@@ -1,5 +1,6 @@
 import os
 import json
+import re
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -71,6 +72,10 @@ async def diagnose(request: DiagnoseRequest):
         )
 
         response_text = message.content[0].text
+        # Strip markdown code fences if present
+        match = re.search(r"```(?:json)?\s*(.*?)\s*```", response_text, re.DOTALL)
+        if match:
+            response_text = match.group(1)
         result = json.loads(response_text)
 
         return DiagnoseResponse(**result)
