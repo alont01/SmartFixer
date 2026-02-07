@@ -80,6 +80,8 @@ async def diagnose(request: DiagnoseRequest):
 
         return DiagnoseResponse(**result)
     except json.JSONDecodeError:
-        raise HTTPException(status_code=502, detail="Failed to parse AI response")
+        raise HTTPException(status_code=502, detail=f"Failed to parse AI response: {response_text[:500]}")
     except anthropic.APIError as e:
         raise HTTPException(status_code=502, detail=f"AI service error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
