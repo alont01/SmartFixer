@@ -10,5 +10,6 @@ data class DiagnosisResult(
     @SerialName("estimated_time")
     val estimatedTime: String,
     val tools: List<String>,
-    val steps: List<String>
+    val steps: List<String>,
+    val category: String = "general"
 )

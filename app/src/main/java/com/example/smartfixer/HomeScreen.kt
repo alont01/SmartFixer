@@ -1,9 +1,12 @@
 package com.example.smartfixer
 
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Videocam
@@ -13,13 +16,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.smartfixer.ui.theme.SmartFixerTheme
 
 @Composable
 fun HomeScreen(
     onDiagnose: (String) -> Unit,
+    onCameraClick: () -> Unit,
+    onGalleryClick: () -> Unit,
+    onVideoClick: () -> Unit,
+    selectedImageUri: Uri?,
+    onRemoveImage: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var issueText by remember { mutableStateOf("") }
@@ -33,7 +39,6 @@ fun HomeScreen(
     ) {
         Spacer(Modifier.height(24.dp))
 
-        // Hero section
         Text(
             text = "SmartFixer",
             style = MaterialTheme.typography.headlineLarge,
@@ -50,7 +55,6 @@ fun HomeScreen(
 
         Spacer(Modifier.height(28.dp))
 
-        // Upload area card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
@@ -76,25 +80,58 @@ fun HomeScreen(
                     UploadOption(
                         icon = Icons.Outlined.CameraAlt,
                         label = "Camera",
-                        onClick = { }
+                        onClick = onCameraClick
                     )
                     UploadOption(
                         icon = Icons.Outlined.Image,
                         label = "Gallery",
-                        onClick = { }
+                        onClick = onGalleryClick
                     )
                     UploadOption(
                         icon = Icons.Outlined.Videocam,
                         label = "Video",
-                        onClick = { }
+                        onClick = onVideoClick
                     )
+                }
+
+                if (selectedImageUri != null) {
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "Image attached",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        IconButton(
+                            onClick = onRemoveImage,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Remove image",
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
 
         Spacer(Modifier.height(20.dp))
 
-        // Describe issue card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
@@ -125,7 +162,6 @@ fun HomeScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        // Diagnose button
         Button(
             onClick = { onDiagnose(issueText) },
             enabled = issueText.isNotBlank(),
@@ -173,13 +209,5 @@ private fun UploadOption(
             Spacer(Modifier.height(4.dp))
             Text(label, style = MaterialTheme.typography.labelMedium)
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    SmartFixerTheme {
-        HomeScreen(onDiagnose = { })
     }
 }

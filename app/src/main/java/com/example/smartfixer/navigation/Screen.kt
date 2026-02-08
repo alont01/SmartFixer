@@ -6,4 +6,7 @@ sealed class Screen(val route: String) {
     object Profile : Screen("profile")
     object PastFixes : Screen("past_fixes")
     object ContactPro : Screen("contact_pro")
+    object PastFixDetail : Screen("past_fix_detail/{fixId}") {
+        fun createRoute(fixId: Long) = "past_fix_detail/$fixId"
+    }
 }

@@ -13,16 +13,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.smartfixer.ui.theme.SmartFixerTheme
+import com.example.smartfixer.data.local.UserProfile
 
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier) {
-    var name by remember { mutableStateOf("Alex Johnson") }
-    var email by remember { mutableStateOf("alex.johnson@email.com") }
-    var notificationsEnabled by remember { mutableStateOf(true) }
-    var darkModeEnabled by remember { mutableStateOf(false) }
+fun ProfileScreen(
+    profile: UserProfile,
+    onSaveProfile: (UserProfile) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var name by remember(profile.name) { mutableStateOf(profile.name) }
+    var email by remember(profile.email) { mutableStateOf(profile.email) }
+    var notificationsEnabled by remember(profile.notificationsEnabled) { mutableStateOf(profile.notificationsEnabled) }
+    var darkModeEnabled by remember(profile.darkModeEnabled) { mutableStateOf(profile.darkModeEnabled) }
+    var showSavedMessage by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -42,7 +46,6 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
 
         Spacer(Modifier.height(24.dp))
 
-        // Avatar placeholder
         Box(
             modifier = Modifier
                 .size(100.dp)
@@ -60,7 +63,6 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
 
         Spacer(Modifier.height(24.dp))
 
-        // Personal info card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
@@ -93,7 +95,6 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
 
         Spacer(Modifier.height(16.dp))
 
-        // Settings card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
@@ -132,10 +133,30 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
             }
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
+
+        if (showSavedMessage) {
+            Text(
+                text = "Profile saved successfully!",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(8.dp))
+        }
 
         Button(
-            onClick = { },
+            onClick = {
+                onSaveProfile(
+                    UserProfile(
+                        name = name,
+                        email = email,
+                        notificationsEnabled = notificationsEnabled,
+                        darkModeEnabled = darkModeEnabled
+                    )
+                )
+                showSavedMessage = true
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
@@ -149,13 +170,5 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
         }
 
         Spacer(Modifier.height(24.dp))
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ProfileScreenPreview() {
-    SmartFixerTheme {
-        ProfileScreen()
     }
 }

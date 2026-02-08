@@ -1,37 +1,36 @@
 package com.example.smartfixer
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.smartfixer.ui.theme.SmartFixerTheme
-
-data class PastFix(
-    val title: String,
-    val date: String,
-    val status: String
-)
-
-private val mockPastFixes = listOf(
-    PastFix("Leaky Kitchen Faucet", "Jan 15, 2026", "Completed"),
-    PastFix("Squeaky Door Hinge", "Jan 8, 2026", "Completed"),
-    PastFix("Running Toilet", "Dec 28, 2025", "Completed"),
-    PastFix("Cracked Drywall Patch", "Dec 15, 2025", "In Progress"),
-    PastFix("Loose Cabinet Handle", "Dec 1, 2025", "Completed"),
-    PastFix("Clogged Bathroom Drain", "Nov 20, 2025", "Completed")
-)
+import com.example.smartfixer.data.local.PastFixEntity
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import kotlinx.coroutines.flow.Flow
 
 @Composable
-fun PastFixesScreen(modifier: Modifier = Modifier) {
+fun PastFixesScreen(
+    pastFixes: Flow<List<PastFixEntity>>,
+    onFixClick: (Long) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val fixes by pastFixes.collectAsState(initial = emptyList())
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -48,21 +47,56 @@ fun PastFixesScreen(modifier: Modifier = Modifier) {
 
         Spacer(Modifier.height(16.dp))
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(mockPastFixes) { fix ->
-                PastFixCard(fix)
+        if (fixes.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Default.History,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        text = "No past fixes yet",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "Diagnose an issue to see it saved here",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
-            item { Spacer(Modifier.height(16.dp)) }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(fixes) { fix ->
+                    PastFixCard(fix = fix, onClick = { onFixClick(fix.id) })
+                }
+                item { Spacer(Modifier.height(16.dp)) }
+            }
         }
     }
 }
 
 @Composable
-private fun PastFixCard(fix: PastFix) {
+private fun PastFixCard(fix: PastFixEntity, onClick: () -> Unit) {
     val isCompleted = fix.status == "Completed"
+    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    val dateStr = dateFormat.format(Date(fix.date))
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.large,
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -87,7 +121,7 @@ private fun PastFixCard(fix: PastFix) {
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = fix.date,
+                    text = dateStr,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
@@ -96,19 +130,11 @@ private fun PastFixCard(fix: PastFix) {
                 onClick = {},
                 label = {
                     Text(
-                        fix.status,
+                        fix.difficulty,
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PastFixesScreenPreview() {
-    SmartFixerTheme {
-        PastFixesScreen()
     }
 }
