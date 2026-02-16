@@ -9,4 +9,5 @@ sealed class Screen(val route: String) {
     object PastFixDetail : Screen("past_fix_detail/{fixId}") {
         fun createRoute(fixId: Long) = "past_fix_detail/$fixId"
     }
+    object ExpertOnboarding : Screen("expert_onboarding")
 }

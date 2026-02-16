@@ -87,10 +87,17 @@ fun SmartFixerApp(profileViewModel: ProfileViewModel) {
     val context = LocalContext.current
     val diagnosisViewModel: DiagnosisViewModel = viewModel()
     val pastFixesViewModel: PastFixesViewModel = viewModel()
+    val expertViewModel: ExpertViewModel = viewModel()
     val diagnosisState by diagnosisViewModel.uiState.collectAsState()
     val selectedImageUri by diagnosisViewModel.selectedImageUri.collectAsState()
     val lastCategory by diagnosisViewModel.lastCategory.collectAsState()
     val profile by profileViewModel.profile.collectAsState()
+    val experts by expertViewModel.allExperts.collectAsState(initial = emptyList())
+    val expertUiState by expertViewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        expertViewModel.seedDummyExperts()
+    }
 
     // Camera temp URI
     val cameraImageUri = remember { mutableStateOf<Uri?>(null) }
@@ -100,6 +107,23 @@ fun SmartFixerApp(profileViewModel: ProfileViewModel) {
     ) { success ->
         if (success) {
             cameraImageUri.value?.let { diagnosisViewModel.setSelectedImageUri(it) }
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val imagesDir = File(context.cacheDir, "images")
+            imagesDir.mkdirs()
+            val imageFile = File(imagesDir, "camera_${System.currentTimeMillis()}.jpg")
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                imageFile
+            )
+            cameraImageUri.value = uri
+            cameraLauncher.launch(uri)
         }
     }
 
@@ -171,16 +195,7 @@ fun SmartFixerApp(profileViewModel: ProfileViewModel) {
                         navController.navigate(Screen.Results.route)
                     },
                     onCameraClick = {
-                        val imagesDir = File(context.cacheDir, "images")
-                        imagesDir.mkdirs()
-                        val imageFile = File(imagesDir, "camera_${System.currentTimeMillis()}.jpg")
-                        val uri = FileProvider.getUriForFile(
-                            context,
-                            "${context.packageName}.fileprovider",
-                            imageFile
-                        )
-                        cameraImageUri.value = uri
-                        cameraLauncher.launch(uri)
+                        cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
                     },
                     onGalleryClick = {
                         galleryLauncher.launch(
@@ -267,7 +282,21 @@ fun SmartFixerApp(profileViewModel: ProfileViewModel) {
                 )
             }
             composable(Screen.ContactPro.route) {
-                ContactProScreen(lastDiagnosisCategory = lastCategory)
+                ContactProScreen(
+                    experts = experts,
+                    lastDiagnosisCategory = lastCategory,
+                    onNavigateToOnboarding = {
+                        navController.navigate(Screen.ExpertOnboarding.route)
+                    }
+                )
+            }
+            composable(Screen.ExpertOnboarding.route) {
+                ExpertOnboardingScreen(
+                    onRegister = { expert -> expertViewModel.insertExpert(expert) },
+                    onBack = { navController.popBackStack() },
+                    uiState = expertUiState,
+                    onResetState = { expertViewModel.resetState() }
+                )
             }
             composable(
                 route = Screen.PastFixDetail.route,
